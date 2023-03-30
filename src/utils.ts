@@ -115,6 +115,7 @@ export function initializeProps<T>(
 }
 
 export function parseAttributeValue(value: string) {
+  console.log(value)
   if (!value) return;
   try {
     return JSON.parse(value);
