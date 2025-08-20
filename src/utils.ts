@@ -1,9 +1,9 @@
-interface PropDefinition<T> {
+export interface PropDefinition<T> {
   value: T;
   attribute: string;
   notify: boolean;
   reflect: boolean;
-  parse: boolean;
+  parse?: boolean;
 }
 export interface ICustomElement {
   [prop: string]: any;
@@ -48,7 +48,7 @@ function cloneProps<T>(props: PropsDefinition<T>) {
     )
       memo[k].value = Object.assign({}, prop.value);
     if (Array.isArray(prop.value))
-      memo[k].value = (prop.value.slice(0) as unknown) as T[keyof T];
+      memo[k].value = prop.value.slice(0) as unknown as T[keyof T];
     return memo;
   }, {} as PropsDefinition<T>);
 }
@@ -60,11 +60,12 @@ export function normalizePropDefs<T>(
   const propKeys = Object.keys(props) as Array<keyof PropsDefinition<T>>;
   return propKeys.reduce((memo, k) => {
     const v = props[k];
-    memo[k] = !(isObject(v) && "value" in v)
-      ? (({ value: v } as unknown) as PropDefinition<T[keyof T]>)
+    memo[k] = !(isObject(v) && "value" in (v as object))
+      ? ({ value: v } as unknown as PropDefinition<T[keyof T]>)
       : (v as PropDefinition<T[keyof T]>);
     memo[k].attribute || (memo[k].attribute = toAttribute(k as string));
-    memo[k].parse = "parse" in memo[k] ? memo[k].parse : typeof memo[k].value !== "string";
+    memo[k].parse =
+      "parse" in memo[k] ? memo[k].parse : typeof memo[k].value !== "string";
     return memo;
   }, {} as PropsDefinition<T>);
 }
@@ -83,14 +84,14 @@ export function initializeProps<T>(
 ) {
   const props = cloneProps(propDefinition),
     propKeys = Object.keys(propDefinition) as Array<keyof PropsDefinition<T>>;
-  propKeys.forEach(key => {
+  propKeys.forEach((key) => {
     const prop = props[key],
       attr = element.getAttribute(prop.attribute),
       value = element[key];
-    if (attr) prop.value = prop.parse ? parseAttributeValue(attr): attr;
+    if (attr != null) prop.value = prop.parse ? parseAttributeValue(attr) : attr;
     if (value != null)
       prop.value = Array.isArray(value) ? value.slice(0) : value;
-    prop.reflect && reflect(element, prop.attribute, prop.value);
+    prop.reflect && reflect(element, prop.attribute, prop.value, !!prop.parse);
     Object.defineProperty(element, key, {
       get() {
         return prop.value;
@@ -98,7 +99,7 @@ export function initializeProps<T>(
       set(val) {
         const oldValue = prop.value;
         prop.value = val;
-        prop.reflect && reflect(this, prop.attribute, prop.value);
+        prop.reflect && reflect(this, prop.attribute, prop.value, !!prop.parse);
         for (
           let i = 0, l = this.__propertyChangedCallbacks.length;
           i < l;
@@ -108,7 +109,7 @@ export function initializeProps<T>(
         }
       },
       enumerable: true,
-      configurable: true
+      configurable: true,
     });
   });
   return props;
@@ -127,10 +128,11 @@ export function parseAttributeValue(value: string) {
 export function reflect<T>(
   node: UpdateableElement<T>,
   attribute: string,
-  value: any
+  value: any,
+  parse: boolean
 ) {
   if (value == null || value === false) return node.removeAttribute(attribute);
-  let reflect = JSON.stringify(value);
+  let reflect = parse ? JSON.stringify(value) : value;
   node.__updating[attribute] = true;
   if (reflect === "true") reflect = "";
   node.setAttribute(attribute, reflect);
@@ -147,7 +149,7 @@ export function toAttribute(propName: string) {
 export function toProperty(attr: string) {
   return attr
     .toLowerCase()
-    .replace(/(-)([a-z])/g, test => test.toUpperCase().replace("-", ""));
+    .replace(/(-)([a-z])/g, (test) => test.toUpperCase().replace("-", ""));
 }
 
 export function isObject(obj: any) {

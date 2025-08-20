@@ -6,7 +6,8 @@ import {
   FunctionComponent as uFunctionComponent,
   ComponentOptions as uComponentOptions,
   ICustomElement as uICustomElement,
-  PropsDefinitionInput as uPropsDefinitionInput
+  PropsDefinitionInput as uPropsDefinitionInput,
+  PropDefinition as uPropDefinition
 } from "./utils";
 
 export type ComponentOptions = uComponentOptions;
@@ -18,14 +19,20 @@ export type ICustomElement = uICustomElement;
 export type RegisterOptions = {
   BaseElement?: typeof HTMLElement;
   extension?: { extends: string };
+  customElements?: CustomElementRegistry;
 };
+export type PropDefinition<T> = uPropDefinition<T>;
 
 export function register<T>(
   tag: string,
   props = {} as PropsDefinitionInput<T>,
   options: RegisterOptions = {}
 ) {
-  const { BaseElement = HTMLElement, extension } = options;
+  const {
+    BaseElement = HTMLElement,
+    extension,
+    customElements = window.customElements
+  } = options;
   return (ComponentType: ComponentType<T>) => {
     if (!tag) throw new Error("tag is required to register a Component");
     let ElementType = customElements.get(tag);
