@@ -47,6 +47,7 @@ export function createElementType<T>(
       this.__releaseCallbacks = [];
       this.__propertyChangedCallbacks = [];
       this.__updating = {};
+      console.log('constructor')
       this.props = initializeProps(this as any, propDefinition);
     }
 

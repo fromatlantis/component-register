@@ -82,6 +82,7 @@ export function initializeProps<T>(
   element: UpdateableElement<T>,
   propDefinition: PropsDefinition<T>
 ) {
+  console.log('initializeProps')
   const props = cloneProps(propDefinition),
     propKeys = Object.keys(propDefinition) as Array<keyof PropsDefinition<T>>;
   propKeys.forEach((key) => {

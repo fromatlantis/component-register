@@ -29,6 +29,7 @@ function propValues(props) {
   }, {});
 }
 function initializeProps(element, propDefinition) {
+  console.log('initializeProps');
   const props = cloneProps(propDefinition),
     propKeys = Object.keys(propDefinition);
   propKeys.forEach(key => {
@@ -120,6 +121,7 @@ function createElementType(BaseElement, propDefinition) {
       this.__releaseCallbacks = [];
       this.__propertyChangedCallbacks = [];
       this.__updating = {};
+      console.log('constructor');
       this.props = initializeProps(this, propDefinition);
     }
     connectedCallback() {
